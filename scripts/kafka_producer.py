@@ -1,13 +1,16 @@
 import json
 from kafka import KafkaProducer
 
+TOPIC_NAME = "enterprise-events"
+BOOTSTRAP_SERVERS = "localhost:9092"
+
 producer = KafkaProducer(
-    bootstrap_servers="localhost:9092",
+    bootstrap_servers=BOOTSTRAP_SERVERS,
     value_serializer=lambda v: json.dumps(v).encode("utf-8"),
 )
 
 producer.send(
-    "agent-events",
+    TOPIC_NAME,
     {
         "event_type": "test",
         "message": "Kafka is working",
