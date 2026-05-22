@@ -1,6 +1,36 @@
-.venv/
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+.venv/
+
+# Logs
+*.log
+
+# Environment
 .env
-*.csv
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Pytest
 .pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Docker
+*.tar
+
+# Build
+dist/
+build/

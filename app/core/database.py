@@ -1,10 +1,41 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+import logging
 
-from app.core.config import DATABASE_URL
+import psycopg
+from psycopg import Connection
 
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is not set")
+from app.core.config import settings
 
-engine = create_engine(DATABASE_URL, echo=False)
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+
+logger = logging.getLogger(__name__)
+
+
+def get_db_connection() -> Connection:
+    """
+    Create PostgreSQL connection.
+    """
+
+    try:
+
+        connection = psycopg.connect(
+            host=settings.POSTGRES_HOST,
+            port=settings.POSTGRES_PORT,
+            dbname=settings.POSTGRES_DB,
+            user=settings.POSTGRES_USER,
+            password=settings.POSTGRES_PASSWORD,
+            autocommit=False
+        )
+
+        logger.info(
+            "PostgreSQL connection established."
+        )
+
+        return connection
+
+    except Exception as error:
+
+        logger.exception(
+            "Database connection failed: %s",
+            str(error)
+        )
+
+        raise

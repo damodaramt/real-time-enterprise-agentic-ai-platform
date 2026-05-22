@@ -1,0 +1,5 @@
+Enterprise AI platforms combine FastAPI, Kafka, PostgreSQL pgvector, Docker, Kubernetes, MCP, Langfuse, and RAG pipelines.
+
+Semantic retrieval enables enterprise knowledge search.
+
+Production AI systems require observability, CI/CD, and scalable infrastructure.
