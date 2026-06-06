@@ -14,7 +14,6 @@ from scripts.generate_embeddings import (
     generate_embedding,
 )
 
-
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 SUPPORTED_EXTENSIONS = {".txt", ".md"}
@@ -33,7 +32,9 @@ def chunk_text(
         return []
 
     if chunk_overlap >= chunk_size:
-        raise ValueError("chunk_overlap must be smaller than chunk_size")
+        raise ValueError(
+            "chunk_overlap must be smaller than chunk_size"
+        )
 
     chunks: List[str] = []
     start = 0
@@ -42,6 +43,7 @@ def chunk_text(
 
     while start < text_length:
         end = min(start + chunk_size, text_length)
+
         chunk = text[start:end].strip()
 
         if chunk:
@@ -65,19 +67,27 @@ def insert_document_chunk(
     """
     Insert one chunk into the documents table.
     """
+
     if len(embedding) != EMBEDDING_DIMENSION:
         raise ValueError(
             f"Expected embedding dimension "
             f"{EMBEDDING_DIMENSION}, got {len(embedding)}"
         )
 
-    vector_literal = "[" + ",".join(f"{x:.10f}" for x in embedding) + "]"
+    vector_literal = (
+        "[" +
+        ",".join(
+            f"{x:.10f}"
+            for x in embedding
+        ) +
+        "]"
+    )
 
     with conn.cursor() as cur:
+
         cur.execute(
             """
             INSERT INTO documents (
-                source,
                 content,
                 metadata,
                 embedding
@@ -85,26 +95,28 @@ def insert_document_chunk(
             VALUES (
                 %s,
                 %s,
-                %s,
                 %s::vector
             )
             RETURNING id
             """,
             (
-                source,
                 content,
                 Jsonb(metadata),
                 vector_literal,
             ),
         )
+
         row = cur.fetchone()
 
         if row is None:
-            raise RuntimeError("Failed to insert document chunk")
+            raise RuntimeError(
+                "Failed to insert document chunk"
+            )
 
         document_id = str(row[0])
 
     conn.commit()
+
     return document_id
 
 
@@ -114,23 +126,37 @@ def process_file(
     file_path: Path,
 ) -> int:
     """
-    Read a file, chunk it, generate embeddings, and store in pgvector.
+    Read a file, chunk it, generate embeddings,
+    and store in pgvector.
     """
+
     print(f"Processing file: {file_path}")
 
-    text = file_path.read_text(encoding="utf-8").strip()
+    text = file_path.read_text(
+        encoding="utf-8"
+    ).strip()
 
     if not text:
         print("Skipping empty file.")
         return 0
 
     chunks = chunk_text(text)
-    print(f"Generated {len(chunks)} chunks.")
+
+    print(
+        f"Generated {len(chunks)} chunks."
+    )
 
     inserted_count = 0
 
-    for index, chunk in enumerate(chunks, start=1):
-        embedding = generate_embedding(model, chunk)
+    for index, chunk in enumerate(
+        chunks,
+        start=1
+    ):
+
+        embedding = generate_embedding(
+            model,
+            chunk
+        )
 
         metadata = {
             "file_name": file_path.name,
@@ -150,8 +176,10 @@ def process_file(
         )
 
         print(
-            f"Inserted chunk {index}/{len(chunks)} "
-            f"→ Document ID: {document_id}"
+            f"Inserted chunk "
+            f"{index}/{len(chunks)} "
+            f"→ Document ID: "
+            f"{document_id}"
         )
 
         inserted_count += 1
@@ -160,41 +188,70 @@ def process_file(
 
 
 def main() -> None:
+
     if not DOCUMENTS_DIR.exists():
         raise FileNotFoundError(
-            f"Directory not found: {DOCUMENTS_DIR}. "
-            f"Create it and add .txt or .md files."
+            f"Directory not found: "
+            f"{DOCUMENTS_DIR}. "
+            f"Create it and add "
+            f".txt or .md files."
         )
 
     files = [
         path
         for path in DOCUMENTS_DIR.rglob("*")
-        if path.is_file() and path.suffix.lower() in SUPPORTED_EXTENSIONS
+        if path.is_file()
+        and path.suffix.lower()
+        in SUPPORTED_EXTENSIONS
     ]
 
     if not files:
         raise FileNotFoundError(
-            f"No supported documents found in {DOCUMENTS_DIR}. "
-            f"Supported extensions: {sorted(SUPPORTED_EXTENSIONS)}"
+            f"No supported documents found "
+            f"in {DOCUMENTS_DIR}. "
+            f"Supported extensions: "
+            f"{sorted(SUPPORTED_EXTENSIONS)}"
         )
 
-    print("Loading embedding model...")
-    model = SentenceTransformer(MODEL_NAME)
+    print(
+        "Loading embedding model..."
+    )
+
+    model = SentenceTransformer(
+        MODEL_NAME
+    )
 
     total_inserted = 0
 
-    print("Connecting to PostgreSQL...")
-    with psycopg.connect(**DB_CONFIG) as conn:
+    print(
+        "Connecting to PostgreSQL..."
+    )
+
+    with psycopg.connect(
+        **DB_CONFIG
+    ) as conn:
+
         for file_path in files:
+
             total_inserted += process_file(
                 conn=conn,
                 model=model,
                 file_path=file_path,
             )
 
-    print("Document ingestion completed successfully.")
-    print(f"Files processed: {len(files)}")
-    print(f"Chunks inserted: {total_inserted}")
+    print(
+        "Document ingestion completed successfully."
+    )
+
+    print(
+        f"Files processed: "
+        f"{len(files)}"
+    )
+
+    print(
+        f"Chunks inserted: "
+        f"{total_inserted}"
+    )
 
 
 if __name__ == "__main__":

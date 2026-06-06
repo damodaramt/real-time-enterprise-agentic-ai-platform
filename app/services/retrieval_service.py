@@ -9,7 +9,6 @@ from psycopg.rows import dict_row
 from app.core.config import settings
 from app.core.database import get_db_connection
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -127,6 +126,11 @@ def search_documents(
             "Query embedding is empty."
         )
 
+    logger.info(
+        "Query embedding dimension=%s",
+        len(query_embedding)
+    )
+
     vector_string = format_vector(
         query_embedding
     )
@@ -163,6 +167,11 @@ def search_documents(
             LIMIT %s;
             """
 
+            logger.info(
+                "Executing semantic search. top_k=%s",
+                settings.TOP_K_RESULTS
+            )
+
             cursor.execute(
                 sql_query,
                 (
@@ -179,9 +188,26 @@ def search_documents(
                 len(rows)
             )
 
-            return normalize_results(
-                rows
+            for row in rows:
+
+                logger.info(
+                    "Document id=%s distance=%s",
+                    row.get("id"),
+                    row.get("distance")
+                )
+
+            normalized_rows = (
+                normalize_results(
+                    rows
+                )
             )
+
+            logger.info(
+                "Normalized results=%s",
+                len(normalized_rows)
+            )
+
+            return normalized_rows
 
     except Exception as error:
 
@@ -194,4 +220,7 @@ def search_documents(
 
     finally:
 
-        connection.close()
+        try:
+            connection.close()
+        except Exception:
+            pass
