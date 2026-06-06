@@ -1,6 +1,4 @@
-from sentence_transformers import (
-    SentenceTransformer
-)
+from sentence_transformers import SentenceTransformer
 
 from app.core.config import settings
 
@@ -12,8 +10,16 @@ model = SentenceTransformer(
 
 def generate_query_embedding(
     query: str
-):
+) -> list[float]:
 
-    embedding = model.encode(query)
+    if not query.strip():
+        raise ValueError(
+            "Query cannot be empty."
+        )
+
+    embedding = model.encode(
+        query,
+        normalize_embeddings=True
+    )
 
     return embedding.tolist()

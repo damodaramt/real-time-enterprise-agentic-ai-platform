@@ -1,34 +1,70 @@
+import logging
 from typing import List
 
+from langchain_text_splitters import (
+    RecursiveCharacterTextSplitter,
+)
 
-CHUNK_SIZE = 500
-
-CHUNK_OVERLAP = 50
+logger = logging.getLogger(__name__)
 
 
-def chunk_text(
-    text: str
-) -> List[str]:
+DEFAULT_CHUNK_SIZE = 1000
+DEFAULT_CHUNK_OVERLAP = 200
 
-    normalized = " ".join(
-        text.split()
-    )
 
-    chunks = []
+class ChunkingService:
 
-    start = 0
+    def __init__(
+        self,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+    ):
 
-    while start < len(normalized):
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
 
-        end = start + CHUNK_SIZE
-
-        chunks.append(
-            normalized[start:end]
+        self.splitter = (
+            RecursiveCharacterTextSplitter(
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+                length_function=len,
+                separators=[
+                    "\n\n",
+                    "\n",
+                    ". ",
+                    " ",
+                    "",
+                ],
+            )
         )
 
-        start += (
-            CHUNK_SIZE
-            - CHUNK_OVERLAP
+        logger.info(
+            "ChunkingService initialized "
+            "chunk_size=%s overlap=%s",
+            chunk_size,
+            chunk_overlap,
         )
 
-    return chunks
+    def chunk_text(
+        self,
+        text: str,
+    ) -> List[str]:
+
+        if not text:
+
+            logger.warning(
+                "Empty text received for chunking"
+            )
+
+            return []
+
+        chunks = self.splitter.split_text(
+            text
+        )
+
+        logger.info(
+            "Generated %s chunks",
+            len(chunks),
+        )
+
+        return chunks

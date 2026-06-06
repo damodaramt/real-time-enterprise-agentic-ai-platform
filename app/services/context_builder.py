@@ -1,8 +1,12 @@
 from typing import Dict
 from typing import List
+from typing import Set
 
+import logging
 
-MAX_CONTEXT_CHARS = 4000
+logger = logging.getLogger(__name__)
+
+MAX_CONTEXT_CHARS = 6000
 
 
 def build_context(
@@ -10,77 +14,123 @@ def build_context(
     retrieved_documents: List[Dict]
 ) -> str:
 
-    """
-    Build optimized RAG prompt context.
-    """
-
     if not retrieved_documents:
+
+        logger.warning(
+            "No retrieved documents found"
+        )
 
         return (
             "No relevant context found."
         )
 
-    context_chunks = []
+    context_parts = []
 
-    total_length = 0
+    seen_chunks: Set[str] = set()
 
-    for index, document in enumerate(
+    total_chars = 0
+
+    sorted_docs = sorted(
         retrieved_documents,
+        key=lambda x: x.get(
+            "score",
+            0.0
+        ),
+        reverse=True
+    )
+
+    for index, doc in enumerate(
+        sorted_docs,
         start=1
     ):
 
-        content = document.get(
+        content = doc.get(
             "content",
             ""
         ).strip()
 
         if not content:
-
             continue
 
+        if content in seen_chunks:
+            continue
+
+        seen_chunks.add(content)
+
+        source = doc.get(
+            "source",
+            "unknown"
+        )
+
+        score = round(
+            float(
+                doc.get(
+                    "score",
+                    0.0
+                )
+            ),
+            4
+        )
+
         chunk = (
-            f"[Document {index}]\n"
+            f"[DOCUMENT {index}]\n"
+            f"Source: {source}\n"
+            f"Score: {score}\n\n"
             f"{content}\n"
         )
 
         chunk_size = len(chunk)
 
         if (
-            total_length + chunk_size
+            total_chars + chunk_size
             > MAX_CONTEXT_CHARS
         ):
+            logger.info(
+                "Context limit reached"
+            )
             break
 
-        context_chunks.append(
+        context_parts.append(
             chunk
         )
 
-        total_length += chunk_size
+        total_chars += chunk_size
 
-    context_text = "\n".join(
-        context_chunks
+    context = "\n".join(
+        context_parts
     )
 
     prompt = f"""
-You are an enterprise AI assistant.
+You are an enterprise retrieval-augmented AI assistant.
 
-Answer ONLY using the provided context.
+Rules:
 
-====================
+1. Use ONLY information found in CONTEXT.
+2. Do not invent facts.
+3. If answer is unavailable, respond:
+   "I could not find the answer in the retrieved documents."
+4. Cite document numbers when possible.
+
+========================
 CONTEXT
-====================
+========================
 
-{context_text}
+{context}
 
-====================
+========================
 QUESTION
-====================
+========================
 
 {query}
 
-====================
+========================
 ANSWER
-====================
+========================
 """
+
+    logger.info(
+        "Built context with %s chars",
+        total_chars
+    )
 
     return prompt.strip()

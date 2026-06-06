@@ -2,72 +2,68 @@ import os
 
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 
 class Settings:
 
-    # =========================================================
-    # Application
-    # =========================================================
-
-    APP_NAME: str = os.getenv(
+    APP_NAME = os.getenv(
         "APP_NAME",
         "enterprise-ai-platform"
     )
 
-    APP_HOST: str = os.getenv(
+    APP_HOST = os.getenv(
         "APP_HOST",
         "0.0.0.0"
     )
 
-    APP_PORT: int = int(
+    APP_PORT = int(
         os.getenv(
             "APP_PORT",
             "8000"
         )
     )
 
-    DEBUG: bool = (
+    DEBUG = (
         os.getenv(
             "DEBUG",
             "false"
         ).lower() == "true"
     )
 
-    # =========================================================
-    # PostgreSQL
-    # =========================================================
+    LOG_LEVEL = os.getenv(
+        "LOG_LEVEL",
+        "INFO"
+    )
 
-    POSTGRES_HOST: str = os.getenv(
+    POSTGRES_HOST = os.getenv(
         "POSTGRES_HOST",
         "localhost"
     )
 
-    POSTGRES_PORT: int = int(
+    POSTGRES_PORT = int(
         os.getenv(
             "POSTGRES_PORT",
             "5432"
         )
     )
 
-    POSTGRES_DB: str = os.getenv(
+    POSTGRES_DB = os.getenv(
         "POSTGRES_DB",
         "enterprise_ai"
     )
 
-    POSTGRES_USER: str = os.getenv(
+    POSTGRES_USER = os.getenv(
         "POSTGRES_USER",
         "postgres"
     )
 
-    POSTGRES_PASSWORD: str = os.getenv(
+    POSTGRES_PASSWORD = os.getenv(
         "POSTGRES_PASSWORD",
         "postgres"
     )
 
-    DATABASE_URL: str = (
+    DATABASE_URL = (
         f"postgresql://"
         f"{POSTGRES_USER}:"
         f"{POSTGRES_PASSWORD}@"
@@ -76,88 +72,120 @@ class Settings:
         f"{POSTGRES_DB}"
     )
 
-    # =========================================================
-    # Embeddings
-    # =========================================================
-
-    EMBEDDING_MODEL: str = os.getenv(
+    EMBEDDING_MODEL = os.getenv(
         "EMBEDDING_MODEL",
         "all-MiniLM-L6-v2"
     )
 
-    EMBEDDING_DIMENSION: int = int(
+    EMBEDDING_DIMENSION = int(
         os.getenv(
             "EMBEDDING_DIMENSION",
             "384"
         )
     )
 
-    # =========================================================
-    # Retrieval
-    # =========================================================
-
-    TOP_K_RESULTS: int = int(
+    TOP_K_RESULTS = int(
         os.getenv(
             "TOP_K_RESULTS",
-            "3"
+            "5"
         )
     )
 
-    SIMILARITY_THRESHOLD: float = float(
+    SIMILARITY_THRESHOLD = float(
         os.getenv(
             "SIMILARITY_THRESHOLD",
             "0.90"
         )
     )
 
-    MAX_CONTENT_LENGTH: int = int(
+    MAX_CONTENT_LENGTH = int(
         os.getenv(
             "MAX_CONTENT_LENGTH",
-            "500"
+            "1000"
         )
     )
 
-    QUERY_TIMEOUT_SECONDS: int = int(
+    QUERY_TIMEOUT_SECONDS = int(
         os.getenv(
             "QUERY_TIMEOUT_SECONDS",
-            "5"
+            "10"
         )
     )
 
-    # =========================================================
-    # Langfuse Observability
-    # =========================================================
+    OPENAI_API_KEY = os.getenv(
+        "OPENAI_API_KEY",
+        ""
+    )
 
-    LANGFUSE_ENABLED: bool = (
+    OPENAI_MODEL = os.getenv(
+        "OPENAI_MODEL",
+        "gpt-4o-mini"
+    )
+
+    OPENAI_TEMPERATURE = float(
+        os.getenv(
+            "OPENAI_TEMPERATURE",
+            "0.0"
+        )
+    )
+
+    OPENAI_MAX_TOKENS = int(
+        os.getenv(
+            "OPENAI_MAX_TOKENS",
+            "1500"
+        )
+    )
+
+    ENABLE_STREAMING = (
+        os.getenv(
+            "ENABLE_STREAMING",
+            "true"
+        ).lower() == "true"
+    )
+
+    JWT_SECRET_KEY = os.getenv(
+        "JWT_SECRET_KEY",
+        ""
+    )
+
+    JWT_ALGORITHM = os.getenv(
+        "JWT_ALGORITHM",
+        "HS256"
+    )
+
+    JWT_EXPIRE_MINUTES = int(
+        os.getenv(
+            "JWT_EXPIRE_MINUTES",
+            "60"
+        )
+    )
+
+    LANGFUSE_ENABLED = (
         os.getenv(
             "LANGFUSE_ENABLED",
             "false"
         ).lower() == "true"
     )
 
-    LANGFUSE_PUBLIC_KEY: str = os.getenv(
+    LANGFUSE_PUBLIC_KEY = os.getenv(
         "LANGFUSE_PUBLIC_KEY",
         ""
     )
 
-    LANGFUSE_SECRET_KEY: str = os.getenv(
+    LANGFUSE_SECRET_KEY = os.getenv(
         "LANGFUSE_SECRET_KEY",
         ""
     )
 
-    LANGFUSE_HOST: str = os.getenv(
+    LANGFUSE_HOST = os.getenv(
         "LANGFUSE_HOST",
         "https://cloud.langfuse.com"
     )
 
-    # =========================================================
-    # MCP
-    # =========================================================
-
-    MCP_TIMEOUT_SECONDS: int = int(
+    MCP_TIMEOUT_SECONDS = int(
         os.getenv(
             "MCP_TIMEOUT_SECONDS",
-            "5"
+            "10"
         )
     )
 

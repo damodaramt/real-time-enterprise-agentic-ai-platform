@@ -3,8 +3,8 @@ from typing import Any
 from typing import Dict
 from typing import List
 
-from psycopg.rows import dict_row
 from psycopg.connection import Connection
+from psycopg.rows import dict_row
 
 from app.core.config import settings
 from app.core.database import get_db_connection
@@ -123,7 +123,6 @@ def search_documents(
 ) -> List[Dict[str, Any]]:
 
     if not query_embedding:
-
         raise ValueError(
             "Query embedding is empty."
         )
@@ -132,7 +131,7 @@ def search_documents(
         query_embedding
     )
 
-    timeout_ms = int(
+    timeout_ms = (
         settings.QUERY_TIMEOUT_SECONDS
         * 1000
     )
@@ -160,7 +159,6 @@ def search_documents(
                 metadata,
                 embedding <=> %s::vector AS distance
             FROM documents
-            WHERE embedding <=> %s::vector < %s
             ORDER BY embedding <=> %s::vector
             LIMIT %s;
             """
@@ -170,8 +168,6 @@ def search_documents(
                 (
                     vector_string,
                     vector_string,
-                    settings.SIMILARITY_THRESHOLD,
-                    vector_string,
                     settings.TOP_K_RESULTS
                 )
             )
@@ -179,7 +175,7 @@ def search_documents(
             rows = cursor.fetchall()
 
             logger.info(
-                "Retrieved %s rows from semantic retrieval.",
+                "Retrieved %s documents.",
                 len(rows)
             )
 

@@ -22,6 +22,8 @@ def get_db_connection() -> Connection:
             dbname=settings.POSTGRES_DB,
             user=settings.POSTGRES_USER,
             password=settings.POSTGRES_PASSWORD,
+            connect_timeout=10,
+            application_name="enterprise-ai-platform",
             autocommit=False
         )
 

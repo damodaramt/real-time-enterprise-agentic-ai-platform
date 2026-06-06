@@ -1,51 +1,55 @@
 import logging
 
-import requests
+from openai import AsyncOpenAI
 
 from app.core.config import settings
-
 
 logger = logging.getLogger(__name__)
 
 
-def generate_response(
-    prompt: str
-) -> str:
+class LLMService:
 
-    """
-    Generate LLM response
-    using Ollama local inference.
-    """
+    def __init__(self):
 
-    try:
-
-        response = requests.post(
-            url=(
-                f"{settings.OLLAMA_BASE_URL}"
-                "/api/generate"
-            ),
-            json={
-                "model": settings.OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False
-            },
-            timeout=60
+        self.client = AsyncOpenAI(
+            api_key=settings.OPENAI_API_KEY
         )
 
-        response.raise_for_status()
+    async def generate_answer(
+        self,
+        prompt: str
+    ) -> str:
 
-        data = response.json()
+        try:
 
-        return data.get(
-            "response",
-            ""
-        )
+            response = (
+                await self.client.chat.completions.create(
+                    model=settings.OPENAI_MODEL,
+                    temperature=settings.OPENAI_TEMPERATURE,
+                    max_tokens=settings.OPENAI_MAX_TOKENS,
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ]
+                )
+            )
 
-    except Exception as error:
+            answer = (
+                response
+                .choices[0]
+                .message
+                .content
+            )
 
-        logger.exception(
-            "LLM generation failed: %s",
-            str(error)
-        )
+            return answer.strip()
 
-        raise
+        except Exception as error:
+
+            logger.exception(
+                "LLM generation failed: %s",
+                str(error)
+            )
+
+            raise
