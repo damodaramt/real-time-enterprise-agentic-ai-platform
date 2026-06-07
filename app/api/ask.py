@@ -2,6 +2,8 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import status
 
+import logging
+
 from app.models.search_models import SearchRequest
 
 from app.services.embedding_service import (
@@ -16,9 +18,15 @@ from app.services.context_builder import (
     build_context
 )
 
+from app.services.prompt_builder import (
+    build_prompt
+)
+
 from app.services.llm_service import (
     LLMService
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -35,6 +43,11 @@ async def ask_question(
 
     try:
 
+        logger.info(
+            "Question received: %s",
+            request.query
+        )
+
         query_embedding = (
             generate_query_embedding(
                 request.query
@@ -45,9 +58,18 @@ async def ask_question(
             query_embedding
         )
 
-        prompt = build_context(
-            request.query,
+        logger.info(
+            "Retrieved documents=%s",
+            len(documents)
+        )
+
+        context = build_context(
             documents
+        )
+
+        prompt = build_prompt(
+            query=request.query,
+            context=context
         )
 
         answer = (
@@ -56,14 +78,35 @@ async def ask_question(
             )
         )
 
+        logger.info(
+            "Answer generated successfully."
+        )
+
         return {
             "answer": answer,
             "sources": documents
         }
 
+    except ValueError as error:
+
+        logger.exception(
+            "Validation error: %s",
+            str(error)
+        )
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
+        )
+
     except Exception as error:
+
+        logger.exception(
+            "RAG pipeline failed: %s",
+            str(error)
+        )
 
         raise HTTPException(
             status_code=500,
-            detail=str(error)
+            detail="Answer generation failed."
         )

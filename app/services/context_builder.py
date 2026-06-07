@@ -1,8 +1,8 @@
+import logging
+from typing import Any
 from typing import Dict
 from typing import List
 from typing import Set
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -10,21 +10,26 @@ MAX_CONTEXT_CHARS = 6000
 
 
 def build_context(
-    query: str,
-    retrieved_documents: List[Dict]
+    retrieved_documents: List[Dict[str, Any]]
 ) -> str:
+
+    if not isinstance(
+        retrieved_documents,
+        list
+    ):
+        raise TypeError(
+            "retrieved_documents must be a list."
+        )
 
     if not retrieved_documents:
 
         logger.warning(
-            "No retrieved documents found"
+            "No retrieved documents found."
         )
 
-        return (
-            "No relevant context found."
-        )
+        return ""
 
-    context_parts = []
+    context_parts: List[str] = []
 
     seen_chunks: Set[str] = set()
 
@@ -33,10 +38,9 @@ def build_context(
     sorted_docs = sorted(
         retrieved_documents,
         key=lambda x: x.get(
-            "score",
-            0.0
-        ),
-        reverse=True
+            "distance",
+            999.0
+        )
     )
 
     for index, doc in enumerate(
@@ -44,10 +48,21 @@ def build_context(
         start=1
     ):
 
-        content = doc.get(
-            "content",
-            ""
-        ).strip()
+        if not isinstance(
+            doc,
+            dict
+        ):
+            continue
+
+        content = (
+            str(
+                doc.get(
+                    "content",
+                    ""
+                )
+            )
+            .strip()
+        )
 
         if not content:
             continue
@@ -55,39 +70,64 @@ def build_context(
         if content in seen_chunks:
             continue
 
-        seen_chunks.add(content)
+        seen_chunks.add(
+            content
+        )
 
-        source = doc.get(
+        metadata = doc.get(
+            "metadata"
+        )
+
+        if not isinstance(
+            metadata,
+            dict
+        ):
+            metadata = {}
+
+        source = metadata.get(
             "source",
             "unknown"
         )
 
-        score = round(
-            float(
-                doc.get(
-                    "score",
-                    0.0
-                )
-            ),
-            4
-        )
+        try:
+
+            distance = round(
+                float(
+                    doc.get(
+                        "distance",
+                        0.0
+                    )
+                ),
+                4
+            )
+
+        except (
+            TypeError,
+            ValueError,
+        ):
+
+            distance = 0.0
 
         chunk = (
             f"[DOCUMENT {index}]\n"
             f"Source: {source}\n"
-            f"Score: {score}\n\n"
+            f"Distance: {distance}\n\n"
             f"{content}\n"
         )
 
-        chunk_size = len(chunk)
+        chunk_size = len(
+            chunk
+        )
 
         if (
             total_chars + chunk_size
             > MAX_CONTEXT_CHARS
         ):
+
             logger.info(
-                "Context limit reached"
+                "Context size limit reached."
             )
+
             break
 
         context_parts.append(
@@ -100,37 +140,10 @@ def build_context(
         context_parts
     )
 
-    prompt = f"""
-You are an enterprise retrieval-augmented AI assistant.
-
-Rules:
-
-1. Use ONLY information found in CONTEXT.
-2. Do not invent facts.
-3. If answer is unavailable, respond:
-   "I could not find the answer in the retrieved documents."
-4. Cite document numbers when possible.
-
-========================
-CONTEXT
-========================
-
-{context}
-
-========================
-QUESTION
-========================
-
-{query}
-
-========================
-ANSWER
-========================
-"""
-
     logger.info(
-        "Built context with %s chars",
-        total_chars
+        "Context built successfully. chars=%s docs=%s",
+        total_chars,
+        len(context_parts),
     )
 
-    return prompt.strip()
+    return context
