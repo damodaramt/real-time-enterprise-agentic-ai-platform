@@ -159,13 +159,14 @@ def process_file(
         )
 
         metadata = {
+            "source": file_path.name,
             "file_name": file_path.name,
             "file_path": str(file_path),
             "chunk_index": index,
             "total_chunks": len(chunks),
             "model": MODEL_NAME,
             "embedding_dimension": EMBEDDING_DIMENSION,
-        }
+        }   
 
         document_id = insert_document_chunk(
             conn=conn,
