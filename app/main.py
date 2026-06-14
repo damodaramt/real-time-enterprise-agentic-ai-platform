@@ -11,6 +11,9 @@ from app.api.mcp import (
 from app.api.search import (
     router as search_router,
 )
+from app.api.stream import (
+    router as stream_router,
+)
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -50,6 +53,11 @@ app.include_router(
 app.include_router(
     ask_router,
     tags=["RAG"],
+)
+
+app.include_router(
+    stream_router,
+    tags=["Streaming"],
 )
 
 app.include_router(
