@@ -44,6 +44,7 @@ pydantic==2.13.4
 pydantic_core==2.46.4
 PyGObject==3.42.1
 PyJWT==2.3.0
+PyMuPDF==1.27.2.3
 pyOpenSSL==21.0.0
 pyparsing==2.4.7
 pypdf==6.13.2
@@ -75,4 +76,3 @@ websockets==16.0
 xxhash==3.7.0
 zipp==1.0.0
 zstandard==0.25.0
-pypdf==6.13.2
